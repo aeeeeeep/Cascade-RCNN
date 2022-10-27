@@ -18,7 +18,7 @@ def img_rename(img_path,anno_path,mode="train"):
             src_img = os.path.join(img_path,img_file)
             dst_img = os.path.join("./data/{}/JPEGImages".format(mode),new_file+".png")
             src_anno = os.path.join(anno_path,file_name+"xml")
-            dst_anno = os.path.join("./data/{}/annotations".format(mode),new_file+".xml")
+            dst_anno = os.path.join("./data/{}/Annotations".format(mode),new_file+".xml")
             os.rename(src_img,dst_img)
             os.rename(src_anno,dst_anno)
             count += 1
@@ -30,7 +30,7 @@ def img_rename(img_path,anno_path,mode="train"):
 
 
 if __name__ == "__main__":
-    img_rename("./data/train/JPEGImages","./data/source/train/Annotations",mode="train")
-    img_rename("./data/test/JPEGImages","./data/source/test/annotations",mode="test")
+    img_rename("./data/train/JPEGImages","./data/train/Annotations",mode="train")
+    img_rename("./data/test/JPEGImages","./data/test/Annotations",mode="test")
 
 

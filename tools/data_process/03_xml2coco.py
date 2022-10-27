@@ -144,7 +144,7 @@ def main():
 
 
     # test
-    xml_path = 'data/test/annotations'
+    xml_path = 'data/test/Annotations'
     img_path = 'data/test/JPEGImages'
     print('processing {} ...'.format("xml format annotations"))
     cvt_annotations(img_path, xml_path, 'data/Annotations/test.json')
