@@ -158,7 +158,7 @@ test_cfg = dict(
         score_thr=0.0001, nms=dict(type='soft_nms', iou_thr=0.5,min_score=0.0001), max_per_img=200))
 # dataset settings
 dataset_type = 'bingzao'
-data_root = 'data/coco/'
+data_root = 'data/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -176,7 +176,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1920,1080),(1280, 1024),(1024,768),(1528,1036),(720,576)],  # img_scale=[(4096, 600), (4096, 800), (4096, 1000)],
+        img_scale=[(1440,1024),(1152, 832),(570,512),(2160,1536),(1728,1228)],  # img_scale=[(4096, 600), (4096, 800), (4096, 1000)],
         flip=True, # 默认是False
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -189,20 +189,20 @@ test_pipeline = [
 ]
 data = dict(
     imgs_per_gpu=4,  #每个GPU计算的图像数量
-    workers_per_gpu=2, # 每个GPU分配的线程数
+    workers_per_gpu=4, # 每个GPU分配的线程数
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/train.json',  # 标注的annotation路径
+        ann_file=data_root + 'Annotations/train.json',  # 标注的annotation路径
         img_prefix=data_root + 'train/JPEGImages',  #数据就的图片路径
         pipeline=train_pipeline),
     # val=dict(
     #     type=dataset_type,
-    #     ann_file=data_root + 'annotations/instances_val2017.json',
+    #     ann_file=data_root + 'Annotations/instances_val2017.json',
     #     img_prefix=data_root + 'val2017/',
     #     pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/test.json',  # 随机生成的
+        ann_file=data_root + 'Annotations/test.json',  # 随机生成的
         img_prefix=data_root + 'test/JPEGImages',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
@@ -231,6 +231,6 @@ dist_params = dict(backend='nccl') # 分布式参数
 log_level = 'INFO'
 work_dir = './work_dirs/cascade_rcnn_r101_fpn_1x'
 # load_from = None   # 加载模型的路径，None表示从预训练模型加载
-load_from = "data/pretrained/cascade_rcnn_r101_fpn_1x_20181129-d64ebac7.pth"
+load_from = "data/pretrained/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth"
 resume_from = None         # 恢复训练模型的路径
 workflow = [('train', 1)]  # 当前工作区的名称

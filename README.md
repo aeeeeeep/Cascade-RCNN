@@ -453,18 +453,18 @@ data = dict(
     workers_per_gpu=2, # -----每个GPU分配的线程数-----
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/train.json',  # ---标注的annotation路径---
+        ann_file=data_root + 'Annotations/train.json',  # ---标注的annotation路径---
         img_prefix=data_root + 'train/JPEGImages',  #---数据就的图片路径---
         pipeline=train_pipeline),
     #-----这里我们没有分配验证集，如果分配可加入----------------
     # val=dict(
     #     type=dataset_type,
-    #     ann_file=data_root + 'annotations/instances_val2017.json',
+    #     ann_file=data_root + 'Annotations/instances_val2017.json',
     #     img_prefix=data_root + 'val2017/',
     #     pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/test.json',  # ----没有的话可以随机生成的---
+        ann_file=data_root + 'Annotations/test.json',  # ----没有的话可以随机生成的---
         img_prefix=data_root + 'test/JPEGImages',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
