@@ -1,0 +1,9 @@
+Looking in indexes: http://mirrors.aliyun.com/pypi/simple
+Requirement already satisfied: mmcv in /root/miniconda3/lib/python3.8/site-packages (1.6.1)
+Requirement already satisfied: pyyaml in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (6.0)
+Requirement already satisfied: yapf in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (0.32.0)
+Requirement already satisfied: Pillow in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (6.2.2)
+Requirement already satisfied: packaging in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (21.3)
+Requirement already satisfied: addict in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (2.4.0)
+Requirement already satisfied: numpy in /root/miniconda3/lib/python3.8/site-packages (from mmcv) (1.21.4)
+Requirement already satisfied: pyparsing!=3.0.5,>=2.0.2 in /root/miniconda3/lib/python3.8/site-packages (from packaging->mmcv) (3.0.6)
