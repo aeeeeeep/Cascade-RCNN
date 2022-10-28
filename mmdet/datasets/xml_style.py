@@ -48,7 +48,7 @@ class XMLDataset(CustomDataset):
         data_infos = []
         img_ids = mmcv.list_from_file(ann_file)
         for img_id in img_ids:
-            filename = osp.join(self.img_subdir, f'{img_id}.jpg')
+            filename = osp.join(self.img_subdir, f'{img_id}.png')
             xml_path = osp.join(self.img_prefix, self.ann_subdir,
                                 f'{img_id}.xml')
             tree = ET.parse(xml_path)

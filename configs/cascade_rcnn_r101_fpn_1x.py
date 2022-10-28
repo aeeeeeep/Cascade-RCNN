@@ -171,8 +171,8 @@ test_cfg = dict(
 # model training and testing settings
 
 # dataset settings
-dataset_type = 'CocoDataset'
-data_root = 'data/coco/'
+dataset_type = 'VOCDataset'
+data_root = 'data/VOCdevkit'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -205,19 +205,20 @@ data = dict(
     workers_per_gpu=4,
     train=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/train2017.json',
-        img_prefix=data_root + 'train2017/',
+        ann_file= data_root + 'VOC2007/ImageSets/trainval.txt'
+        img_prefix= data_root + 'VOC2007/' 
         pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/val2017.json',
-        img_prefix=data_root + 'val2017/',
+        ann_file= data_root + 'VOC2007/ImageSets/test.txt'
+        img_prefix= data_root + 'VOC2007/' 
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/val2017.json',
+        ann_file=data_root + 'annotations/test.txt',
         img_prefix=data_root + 'val2017/',
         pipeline=test_pipeline))
+evaluation = dict(interval=1, metric='mAP')
 # optimizer
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
