@@ -33,12 +33,12 @@ model = dict(
     roi_head=dict(
         type='CascadeRoIHead',
         num_stages=3,
-        stage_loss_weights=[1, 0.5, 0.25],),
+        stage_loss_weights=[1, 0.5, 0.25],
         bbox_roi_extractor=dict(
             type='SingleRoIExtractor',
             roi_layer=dict(type='RoIAlign', out_size=7, sample_num=2),
             out_channels=256,
-            featmap_strides=[4, 8, 16, 32],
+            featmap_strides=[4, 8, 16, 32],),
         bbox_head=[
             dict(
                 type='Shared2FCBBoxHead',
