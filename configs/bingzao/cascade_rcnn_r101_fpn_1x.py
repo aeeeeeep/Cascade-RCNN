@@ -223,10 +223,16 @@ lr_config = dict(
 checkpoint_config = dict(interval=20) #每n个epoch存储一次模型
 # yapf:disable
 log_config = dict(
-    interval=20,  # 每20iter报告一次
+    interval=20,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(
+            type='WandbLoggerHook',
+            init_kwargs=dict(
+                project='proj_name',
+                name='user_name'
+            )
+        )
     ])
 # yapf:enable
 # runtime settings
