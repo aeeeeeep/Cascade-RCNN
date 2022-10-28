@@ -265,7 +265,7 @@ log_config = dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
                 project='Cascade_RCNN_r101_fpn_1x',
-                name='aeeeeeep'
+                name='add aug & adamw'
             )
         )
     ])
