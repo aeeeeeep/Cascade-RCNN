@@ -1,66 +1,65 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+import inspect
 import logging
 
-from mmcv.runner import get_dist_info
+from mmcv.utils import get_logger
 
 
 def get_root_logger(log_file=None, log_level=logging.INFO):
-    """Get the root logger.
-
-    The logger will be initialized if it has not been initialized. By default a
-    StreamHandler will be added. If `log_file` is specified, a FileHandler will
-    also be added. The name of the root logger is the top-level package name,
-    e.g., "mmdet".
+    """Get root logger.
 
     Args:
-        log_file (str | None): The log filename. If specified, a FileHandler
-            will be added to the root logger.
-        log_level (int): The root logger level. Note that only the process of
-            rank 0 is affected, while other processes will set the level to
-            "Error" and be silent most of the time.
+        log_file (str, optional): File path of log. Defaults to None.
+        log_level (int, optional): The level of logger.
+            Defaults to logging.INFO.
 
     Returns:
-        logging.Logger: The root logger.
+        :obj:`logging.Logger`: The obtained logger
     """
-    logger = logging.getLogger(__name__.split('.')[0])  # i.e., mmdet
-    # if the logger has been initialized, just return it
-    if logger.hasHandlers():
-        return logger
-
-    format_str = '%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-    logging.basicConfig(format=format_str, level=log_level)
-    rank, _ = get_dist_info()
-    if rank != 0:
-        logger.setLevel('ERROR')
-    elif log_file is not None:
-        file_handler = logging.FileHandler(log_file, 'w')
-        file_handler.setFormatter(logging.Formatter(format_str))
-        file_handler.setLevel(log_level)
-        logger.addHandler(file_handler)
+    logger = get_logger(name='mmdet', log_file=log_file, log_level=log_level)
 
     return logger
 
 
-def print_log(msg, logger=None, level=logging.INFO):
-    """Print a log message.
+def get_caller_name():
+    """Get name of caller method."""
+    # this_func_frame = inspect.stack()[0][0]  # i.e., get_caller_name
+    # callee_frame = inspect.stack()[1][0]  # e.g., log_img_scale
+    caller_frame = inspect.stack()[2][0]  # e.g., caller of log_img_scale
+    caller_method = caller_frame.f_code.co_name
+    try:
+        caller_class = caller_frame.f_locals['self'].__class__.__name__
+        return f'{caller_class}.{caller_method}'
+    except KeyError:  # caller is a function
+        return caller_method
+
+
+def log_img_scale(img_scale, shape_order='hw', skip_square=False):
+    """Log image size.
 
     Args:
-        msg (str): The message to be logged.
-        logger (logging.Logger | str | None): The logger to be used. Some
-            special loggers are:
-            - "root": the root logger obtained with `get_root_logger()`.
-            - "silent": no message will be printed.
-            - None: The `print()` method will be used to print log messages.
-        level (int): Logging level. Only available when `logger` is a Logger
-            object or "root".
+        img_scale (tuple): Image size to be logged.
+        shape_order (str, optional): The order of image shape.
+            'hw' for (height, width) and 'wh' for (width, height).
+            Defaults to 'hw'.
+        skip_square (bool, optional): Whether to skip logging for square
+            img_scale. Defaults to False.
+
+    Returns:
+        bool: Whether to have done logging.
     """
-    if logger is None:
-        print(msg)
-    elif logger == 'root':
-        _logger = get_root_logger()
-        _logger.log(level, msg)
-    elif isinstance(logger, logging.Logger):
-        logger.log(level, msg)
-    elif logger != 'silent':
-        raise TypeError(
-            'logger should be either a logging.Logger object, "root", '
-            '"silent" or None, but got {}'.format(logger))
+    if shape_order == 'hw':
+        height, width = img_scale
+    elif shape_order == 'wh':
+        width, height = img_scale
+    else:
+        raise ValueError(f'Invalid shape_order {shape_order}.')
+
+    if skip_square and (height == width):
+        return False
+
+    logger = get_root_logger()
+    caller = get_caller_name()
+    logger.info(f'image shape: height={height}, width={width} in {caller}')
+
+    return True
