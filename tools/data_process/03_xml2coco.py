@@ -4,7 +4,7 @@ import xml.etree.ElementTree as ET
 
 import mmcv
 
-from mmdet.core.evaluation.class_names import bingzao_classes
+from mmdet.core.evaluation import bingzao_classes
 
 from glob import glob
 from tqdm import tqdm
