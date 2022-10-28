@@ -106,8 +106,10 @@ train_cfg = dict(
             nms_across_levels=False,
             nms_pre=2000,
             nms_post=2000,
-            max_num=2000,
-            nms_thr=0.7,
+            # max_num=2000,
+            # nms_thr=0.7,
+            max_per_img=2000,
+            nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=[
             dict(
@@ -162,8 +164,10 @@ test_cfg = dict(
             nms_across_levels=False,
             nms_pre=1000,
             nms_post=1000,
-            max_num=1000,
-            nms_thr=0.7,
+            # max_num=1000,
+            # nms_thr=0.7,
+            max_per_img=1000,
+            nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
         rcnn=dict(
             score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.5), max_per_img=100),
@@ -172,7 +176,7 @@ test_cfg = dict(
 
 # dataset settings
 dataset_type = 'VOCDataset'
-data_root = 'data/VOCdevkit/'
+data_root = '/root/autodl-tmp/VOCdevkit/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -204,10 +208,13 @@ data = dict(
     samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
-        type=dataset_type,
-        ann_file = data_root + 'VOC2007/ImageSets/Main/trainval.txt',
-        img_prefix = data_root + 'VOC2007/', 
-        pipeline=train_pipeline),
+        type='RepeatDataset',
+        times=3,
+        dataset=dict(
+            type=dataset_type,
+            ann_file = [data_root + 'VOC2007/ImageSets/Main/trainval.txt'],
+            img_prefix = [data_root + 'VOC2007/'], 
+            pipeline=train_pipeline)),
     val=dict(
         type=dataset_type,
         ann_file = data_root + 'VOC2007/ImageSets/Main/test.txt',
@@ -215,8 +222,8 @@ data = dict(
         pipeline=test_pipeline),
     test=dict(
         type=dataset_type,
-        ann_file=data_root + 'annotations/test.txt',
-        img_prefix=data_root + 'val2017/',
+        ann_file = data_root + 'VOC2007/ImageSets/Main/test.txt',
+        img_prefix=data_root + 'VOC2007/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='mAP')
 # optimizer
@@ -231,11 +238,23 @@ lr_config = dict(
     step=[70,90])
 checkpoint_config = dict(interval=20)
 # yapf:disable
+# log_config = dict(
+#     interval=20,
+#     hooks=[
+#         dict(type='TextLoggerHook'),
+#         # dict(type='TensorboardLoggerHook')
+#     ])
 log_config = dict(
     interval=20,
     hooks=[
         dict(type='TextLoggerHook'),
-        # dict(type='TensorboardLoggerHook')
+        dict(
+            type='WandbLoggerHook',
+            init_kwargs=dict(
+                project='Cascade_RCNN_r101_fpn_1x',
+                name='aeeeeeep'
+            )
+        )
     ])
 # yapf:enable
 # runtime settings
