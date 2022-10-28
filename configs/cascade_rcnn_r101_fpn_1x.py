@@ -82,8 +82,9 @@ model = dict(
             loss_cls=dict(
                 type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
             loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
-    ],
-    train_cfg = dict(
+    ],)
+
+train_cfg = dict(
         rpn=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
@@ -154,8 +155,8 @@ model = dict(
                 pos_weight=-1,
                 debug=False)
         ],
-        stage_loss_weights=[1, 0.5, 0.25]),
-    test_cfg = dict(
+        stage_loss_weights=[1, 0.5, 0.25])
+test_cfg = dict(
         rpn=dict(
             nms_across_levels=False,
             nms_pre=1000,
@@ -165,8 +166,7 @@ model = dict(
             min_bbox_size=0),
         rcnn=dict(
             score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.5), max_per_img=100),
-        keep_all_stages=False),
-    ),
+        keep_all_stages=False)
 # model training and testing settings
 
 # dataset settings
