@@ -4,11 +4,14 @@ import xml.etree.ElementTree as ET
 
 import mmcv
 
-from mmdet.core.evaluation.class_names import bingzao_classes
+# from mmdet.core.evaluation.class_names import bingzao_classes
 
 from glob import glob
 from tqdm import tqdm
 from PIL import Image
+def bingzao_classes():
+    return ["0","1","2","3","4","5","6","7"]
+
 label_ids = {name: i + 1 for i, name in enumerate(bingzao_classes())}
 
 print(label_ids)
