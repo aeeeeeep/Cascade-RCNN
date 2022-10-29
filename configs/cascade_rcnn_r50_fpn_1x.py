@@ -1,16 +1,27 @@
 # model settings
 model = dict(
     type='CascadeRCNN',
-    pretrained='torchvision://resnet50',
+
     backbone=dict(
-        type='ResNet',
-        depth=50,
-        num_stages=4,
-        out_indices=(0, 1, 2, 3),
-        frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=True),
-        norm_eval=True,
-        style='pytorch'),
+    type='ResNeXt',
+    depth=101,
+    groups=32,
+    base_width=4,
+    num_stages=4,
+    out_indices=(0, 1, 2, 3),
+    frozen_stages=1,
+    norm_cfg=dict(type='BN', requires_grad=True),
+    style='pytorch',
+    init_cfg=dict(type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d')),
+    # backbone=dict(
+    #     type='ResNet',
+    #     depth=50,
+    #     num_stages=4,
+    #     out_indices=(0, 1, 2, 3),
+    #     frozen_stages=1,
+    #     norm_cfg=dict(type='BN', requires_grad=True),
+    #     norm_eval=True,
+    #     style='pytorch'),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -22,7 +33,7 @@ model = dict(
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
-            scales=[8],
+            scales=[4],
             ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         bbox_coder=dict(
@@ -267,7 +278,7 @@ log_config = dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
                 project='Cascade_RCNN_r101_fpn_1x',
-                name='add aug & adamw'
+                name='anchor & x101 32x4d'
             )
         )
     ])
@@ -276,7 +287,8 @@ log_config = dict(
 total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_rcnn_r50_fpn_1x'
-load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
+work_dir = './work_dirs/cascade_rcnn_x101_32x4d_fpn_1x'
+# load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
+load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
 resume_from = None
 workflow = [('train', 1)]
