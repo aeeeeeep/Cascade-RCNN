@@ -55,8 +55,8 @@ model = dict(
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='LabelSmoothCrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                loss_bbox=dict(type='GIoUloss', loss_weight=10.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -70,7 +70,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='FocalLoss', use_sigmoid=True),
-                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -84,7 +84,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))
+                loss_bbox=dict(type='SmoothL1Loss',beta=1.0, loss_weight=1.0))
         ],)
 )
 
@@ -110,7 +110,7 @@ train_cfg = dict(
             nms_pre=2000,
             nms_post=2000,
             max_per_img=2000,
-            nms=dict(type='nms', iou_threshold=0.7),
+            nms=dict(type='soft_nms', iou_threshold=0.5),
             min_bbox_size=0),
         rcnn=[
             dict(
@@ -168,7 +168,7 @@ test_cfg = dict(
             # max_num=1000,
             # nms_thr=0.7,
             max_per_img=1000,
-            nms=dict(type='nms', iou_threshold=0.7),
+            nms=dict(type='soft_nms', iou_threshold=0.5),
             min_bbox_size=0),
         rcnn=dict(
             score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.5), max_per_img=100),
@@ -183,9 +183,6 @@ img_norm_cfg = dict(
 load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
     dict(type='Mosaic', img_scale=(1440, 1024), pad_val=114.0),
@@ -198,9 +195,12 @@ train_pipeline = [
         img_scale=(1440, 1024),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
+    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
+    dict(type='Pad', size_divisor=32),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
-    dict(type='Collect', keys=['img', 'gt_bbdoxes', 'gt_labels']),
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -225,9 +225,9 @@ data = dict(
         dataset=dict(
             type=dataset_type,
             ann_file = [data_root + 'VOC2007/ImageSets/Main/trainval.txt'],
-            img_prefix = [data_root + 'VOC2007/'], 
+            img_prefix = [data_root + 'VOC2007/'],
             pipeline=load_pipeline),
-        pipeline=train_pipeline),
+            pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file = data_root + 'VOC2007/ImageSets/Main/test.txt',
