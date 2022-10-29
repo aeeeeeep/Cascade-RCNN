@@ -1,12 +1,15 @@
 # model settings
 model = dict(
     type='CascadeRCNN',
-    pretrained='torchvision://resnet101',
+    pretrained='torchvision://resnet50',
     backbone=dict(
         type='ResNet',
-        depth=101,
+        depth=50,
+        num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
+        norm_cfg=dict(type='BN', requires_grad=True),
+        norm_eval=True,
         style='pytorch'),
     neck=dict(
         type='FPN',
@@ -52,8 +55,8 @@ model = dict(
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                    type='LabelSmoothCrossEntropyLoss', use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_bbox=dict(type='GIoUloss', loss_weight=10.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -66,8 +69,8 @@ model = dict(
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                    type='FocalLoss', use_sigmoid=True),
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -81,7 +84,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
+                loss_bbox=dict(type='GIoULoss', loss_weight=10.0))
         ],)
 )
 
@@ -106,8 +109,6 @@ train_cfg = dict(
             nms_across_levels=False,
             nms_pre=2000,
             nms_post=2000,
-            # max_num=2000,
-            # nms_thr=0.7,
             max_per_img=2000,
             nms=dict(type='nms', iou_threshold=0.7),
             min_bbox_size=0),
@@ -179,24 +180,25 @@ dataset_type = 'VOCDataset'
 data_root = '/root/autodl-tmp/VOCdevkit/'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
-train_pipeline = [
+load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='CopyPaste', max_num_pasted=100),
+    dict(type='Pad', size_divisor=32),
+]
+train_pipeline = [
     dict(type='Mosaic', img_scale=(1440, 1024), pad_val=114.0),
     dict(
         type='RandomAffine',
         scaling_ratio_range=(0.1, 2),
-        border=(-1440 // 2, -1024 // 2)),
+        border=(-(1440 // 2), - (1024 // 2))),
     dict(
         type='MixUp',
         img_scale=(1440, 1024),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
     dict(type='Normalize', **img_norm_cfg),
-    dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bbdoxes', 'gt_labels']),
 ]
@@ -219,13 +221,13 @@ data = dict(
     samples_per_gpu=4,
     workers_per_gpu=4,
     train=dict(
-        type='RepeatDataset',
-        times=3,
+        type='MultiImageMixDataset',
         dataset=dict(
             type=dataset_type,
             ann_file = [data_root + 'VOC2007/ImageSets/Main/trainval.txt'],
             img_prefix = [data_root + 'VOC2007/'], 
-            pipeline=train_pipeline)),
+            pipeline=load_pipeline),
+        pipeline=train_pipeline),
     val=dict(
         type=dataset_type,
         ann_file = data_root + 'VOC2007/ImageSets/Main/test.txt',
@@ -274,7 +276,7 @@ log_config = dict(
 total_epochs = 100
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_rcnn_r101_fpn_1x'
-load_from = "./data/pretrained/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth"
+work_dir = './work_dirs/cascade_rcnn_r50_fpn_1x'
+load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
 resume_from = None
 workflow = [('train', 1)]

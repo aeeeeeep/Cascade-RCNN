@@ -1,0 +1,26 @@
+{
+    "os": "Linux-5.4.0-107-generic-x86_64-with-glibc2.17",
+    "python": "3.8.10",
+    "heartbeatAt": "2022-10-29T02:09:03.083874",
+    "startedAt": "2022-10-29T02:09:02.848602",
+    "docker": null,
+    "gpu": "NVIDIA RTX A5000",
+    "gpu_count": 1,
+    "cpu_count": 128,
+    "cuda": null,
+    "args": [
+        "configs/cascade_rcnn_r101_fpn_1x.py"
+    ],
+    "state": "running",
+    "program": "tools/train.py",
+    "codePath": "tools/train.py",
+    "git": {
+        "remote": "git@github.com:aeeeeeep/Cascade-RCNN.git",
+        "commit": "3894639febfa31be4a53b7589426348ff5bc15cf"
+    },
+    "email": "aep_sun@qq.com",
+    "root": "/root/mmdetection",
+    "host": "container-2153118b3c-554af6b6",
+    "username": "root",
+    "executable": "/root/miniconda3/bin/python"
+}
