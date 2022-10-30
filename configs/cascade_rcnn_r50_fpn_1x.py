@@ -1,27 +1,31 @@
 # model settings
+custom_imports = dict(imports=['mmcls.models'], allow_failed_imports=False)
+checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth'  # noqa
+
 model = dict(
     type='CascadeRCNN',
 
     backbone=dict(
-    type='ResNeXt',
-    depth=101,
-    groups=32,
-    base_width=4,
-    num_stages=4,
-    out_indices=(0, 1, 2, 3),
-    frozen_stages=1,
-    norm_cfg=dict(type='BN', requires_grad=True),
-    style='pytorch',
-    init_cfg=dict(type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d')),
-    # backbone=dict(
-    #     type='ResNet',
-    #     depth=50,
-    #     num_stages=4,
-    #     out_indices=(0, 1, 2, 3),
-    #     frozen_stages=1,
-    #     norm_cfg=dict(type='BN', requires_grad=True),
-    #     norm_eval=True,
-    #     style='pytorch'),
+    # type='ResNeXt',
+    # depth=101,
+    # groups=32,
+    # base_width=4,
+    # num_stages=4,
+    # out_indices=(0, 1, 2, 3),
+    # frozen_stages=1,
+    # norm_cfg=dict(type='BN', requires_grad=True),
+    # style='pytorch',
+    # init_cfg=dict(type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d')),
+        _delete_=True,
+        type='mmcls.ConvNeXt',
+        arch='small',
+        out_indices=[0, 1, 2, 3],
+        drop_path_rate=0.6,
+        layer_scale_init_value=1.0,
+        gap_before_final_norm=False,
+        init_cfg=dict(
+            type='Pretrained', checkpoint=checkpoint_file,
+            prefix='backbone.')),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -67,7 +71,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                loss_bbox=dict(type='CIoULoss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -81,7 +85,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='FocalLoss', use_sigmoid=True),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                loss_bbox=dict(type='CIoULoss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -95,7 +99,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss',beta=1.0, loss_weight=1.0))
+                loss_bbox=dict(type='CIoULoss', loss_weight=1.0))
         ],)
 )
 
@@ -196,6 +200,7 @@ load_pipeline = [
     dict(type='LoadAnnotations', with_bbox=True),
 ]
 train_pipeline = [
+    dict(type='AutoAugment_copy', autoaug_type='v2'),
     dict(type='Mosaic', img_scale=(1440, 1024), pad_val=114.0),
     dict(
         type='RandomAffine',
@@ -209,6 +214,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
+    dict(type='CopyPaste', max_num_pasted=100),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
