@@ -19,8 +19,7 @@ model = dict(
         type='mmcls.ConvNeXt',
         arch='small',
         out_indices=[0, 1, 2, 3],
-        depths=[3, 3, 27, 3],
-        dims=[96, 192, 384, 768],
+        # dims=[96, 192, 384, 768],
         drop_path_rate=0.6,
         layer_scale_init_value=1.0,
         gap_before_final_norm=False,
@@ -236,8 +235,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=4,
-    workers_per_gpu=4,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type='MultiImageMixDataset',
         dataset=dict(
@@ -284,8 +283,8 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='Cascade_RCNN_r101_fpn_1x',
-                name='anchor & x101 32x4d'
+                project='Cascade_RCNN_ConvNeXt_S',
+                name='ConvNeXt_S'
             )
         )
     ])
