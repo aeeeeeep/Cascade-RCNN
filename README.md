@@ -10,14 +10,13 @@
 * mmdet==2.25.3
 
 ## Finsh
-
-## TODO
-
-* 多尺度训练
 * 数据增强
 * Soft-NMS
+* CIoULoss
+* half anchor
+
+## TODO
+* 多尺度训练
 * OHEM
 * 可变形卷积
-* GIoULoss
 * 冻结backbone
-* autoanchor

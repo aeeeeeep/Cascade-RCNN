@@ -2767,7 +2767,7 @@ class CopyPaste:
     1. The destination image is already resized with aspect ratio kept,
        cropped and padded.
     2. Randomly select a source image, which is also already resized
-       with aspect ratio kept, cropped and padded in a similar way
+       with aspect ratio kept, cropped and padded in a similar way256
        as the destination image.
     3. Randomly select some objects from the source image.
     4. Paste these source objects to the destination image directly,
