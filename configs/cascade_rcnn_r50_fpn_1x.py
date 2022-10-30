@@ -198,6 +198,9 @@ img_norm_cfg = dict(
 load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
+    dict(type='Rotate', level=1, max_rotate_angle=90),
+    dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
+    dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
     dict(type='AutoAugment_copy', autoaug_type='v2'),
@@ -212,8 +215,6 @@ train_pipeline = [
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
     dict(type='RandomFlip', flip_ratio=0.5),
-    dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
-    dict(type='Pad', size_divisor=32),
     # dict(type='CopyPaste', max_num_pasted=100),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
@@ -257,17 +258,22 @@ data = dict(
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='mAP')
 # optimizer
-optimizer = dict(type='AdamW', lr=6e-5, betas=(0.9, 0.999),
+optimizer = dict(type='AdamW', lr=0.0001, betas=(0.9, 0.999),
                                weight_decay=0.01,
                                paramwise_cfg=dict(custom_keys=dict(head=dict(lr_mult=10.0))))
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
-    policy='step',
-    warmup='linear',
-    warmup_iters=500,
-    warmup_ratio=1.0 / 3,
-    step=[70,90])
+    policy='cyclic',
+    target_ratio=(10, 1e-4),
+    cyclic_times=1,
+    step_ratio_up=0.4
+    )
+momentum_config = dict(
+    policy='cyclic',
+    target_ratio=(0.8947368421052632, 1),
+    cyclic_times=1,
+    step_ratio_up=0.4)
 checkpoint_config = dict(interval=20)
 # yapf:disable
 # log_config = dict(
@@ -295,6 +301,7 @@ dist_params = dict(backend='nccl')
 log_level = 'INFO'
 work_dir = './work_dirs/cascade_rcnn_x101_32x4d_fpn_1x'
 # load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
-load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
+# load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
+load_from = None
 resume_from = None
 workflow = [('train', 1)]
