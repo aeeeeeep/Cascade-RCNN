@@ -2,6 +2,8 @@
 import argparse
 import copy
 import os
+import sys
+sys.path.append('../')
 import os.path as osp
 import time
 import warnings

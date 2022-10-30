@@ -2760,7 +2760,8 @@ class YOLOXHSVRandomAug:
 
 @PIPELINES.register_module()
 class CopyPaste:
-    """Simple Copy-Paste is a Strong Data Augmentation Method for Instance
+    """
+    Simple Copy-Paste is a Strong Data Augmentation Method for Instance
     Segmentation The simple copy-paste transform steps are as follows:
 
     1. The destination image is already resized with aspect ratio kept,
@@ -2802,7 +2803,7 @@ class CopyPaste:
         self.bbox_occluded_thr = bbox_occluded_thr
         self.mask_occluded_thr = mask_occluded_thr
         self.selected = selected
-        self.mask_gen = False
+        self.paste_by_box = False
 
     def get_indexes(self, dataset):
         """Call function to collect indexes.s.
@@ -2815,39 +2816,40 @@ class CopyPaste:
         return random.randint(0, len(dataset))
 
     def gen_masks_from_bboxes(self, bboxes, img_shape):
-        """
-        Generate gt_masks based on gt_bboxes.
+        """Generate gt_masks based on gt_bboxes.
+
         Args:
             bboxes (list): The bboxes's list.
             img_shape (tuple): The shape of image.
         Returns:
             BitmapMasks
         """
-        self.mask_gen = True
+        self.paste_by_box = True
         img_h, img_w = img_shape[:2]
-        masks = []
-        for x1, y1, x2, y2 in bboxes:
-            mask = np.zeros((img_h, img_w), dtype=np.uint8)
-            bbox = np.array([[[x1, y1], [x2, y1], [x2, y2], [x1, y2]]],
-                            dtype=np.int32)
-            mask = cv2.fillPoly(mask, bbox, 1)
-            masks.append(mask)
+        xmin, ymin = bboxes[:, 0:1], bboxes[:, 1:2]
+        xmax, ymax = bboxes[:, 2:3], bboxes[:, 3:4]
+        gt_masks = np.zeros((len(bboxes), img_h, img_w), dtype=np.uint8)
+        for i in range(len(bboxes)):
+            gt_masks[i,
+                     int(ymin[i]):int(ymax[i]),
+                     int(xmin[i]):int(xmax[i])] = 1
+        return BitmapMasks(gt_masks, img_h, img_w)
 
-        return BitmapMasks(np.array(masks), img_h, img_w)
+    def get_gt_masks(self, results):
+        """Get gt_masks originally or generated based on bboxes.
 
-    def check_gt_masks(self, results):
-        """
-        Check gt_masks in result. If gt_masks is not contained in results,
+        If gt_masks is not contained in results,
         it will be generated based on gt_bboxes.
         Args:
             results (dict): Result dict.
         Returns:
-            dict: gt_masks, originally or generated based on bboxes.
+            BitmapMasks: gt_masks, originally or generated based on bboxes.
         """
-        return results.get(
-            'gt_masks',
-            self.gen_masks_from_bboxes(
-                results.get('gt_bboxes', []), results['img'].shape))
+        if results.get('gt_masks', None) is not None:
+            return results['gt_masks']
+        else:
+            return self.gen_masks_from_bboxes(
+                results.get('gt_bboxes', []), results['img'].shape)
 
     def __call__(self, results):
         """Call function to make a copy-paste of image.
@@ -2863,10 +2865,10 @@ class CopyPaste:
         assert num_images == 1, \
             f'CopyPaste only supports processing 2 images, got {num_images}'
 
-        # check gt_masks
-        results['gt_masks'] = self.check_gt_masks(results)
+        # Get gt_masks originally or generated based on bboxes.
+        results['gt_masks'] = self.get_gt_masks(results)
         # only one mix picture
-        results['mix_results'][0]['gt_masks'] = self.check_gt_masks(
+        results['mix_results'][0]['gt_masks'] = self.get_gt_masks(
             results['mix_results'][0])
 
         if self.selected:
@@ -2914,7 +2916,7 @@ class CopyPaste:
         src_masks = src_results['gt_masks']
 
         if len(src_bboxes) == 0:
-            if self.mask_gen:
+            if self.paste_by_box:
                 dst_results.pop('gt_masks')
             return dst_results
 
@@ -2944,7 +2946,7 @@ class CopyPaste:
         dst_results['img'] = img
         dst_results['gt_bboxes'] = bboxes
         dst_results['gt_labels'] = labels
-        if self.mask_gen:
+        if self.paste_by_box:
             dst_results.pop('gt_masks')
         else:
             dst_results['gt_masks'] = BitmapMasks(masks, masks.shape[1],
@@ -2965,3 +2967,44 @@ class CopyPaste:
         repr_str += f'mask_occluded_thr={self.mask_occluded_thr}, '
         repr_str += f'selected={self.selected}, '
         return repr_str
+
+@PIPELINES.register_module()
+class AutoAugment_copy(object):
+    def __init__(self, autoaug_type="v1"):
+        """
+        Args:
+            autoaug_type (str): autoaug type, support v0, v1, v2, v3, test
+        """
+        super(AutoAugment_copy, self).__init__()
+        self.autoaug_type = autoaug_type
+
+    def __call__(self, results):
+        """
+        Learning Data Augmentation Strategies for Object Detection, see https://arxiv.org/abs/1906.11172
+        """
+        gt_bbox = results['gt_bboxes']
+        im = results['img']
+        if len(gt_bbox) == 0:
+            return results
+
+        height, width, _ = im.shape
+        norm_gt_bbox = np.ones_like(gt_bbox, dtype=np.float32)
+        norm_gt_bbox[:, 0] = gt_bbox[:, 1] / float(height)
+        norm_gt_bbox[:, 1] = gt_bbox[:, 0] / float(width)
+        norm_gt_bbox[:, 2] = gt_bbox[:, 3] / float(height)
+        norm_gt_bbox[:, 3] = gt_bbox[:, 2] / float(width)
+
+        from mmdet.datasets.pipelines.autoaugment_utils import distort_image_with_autoaugment
+        im, norm_gt_bbox = distort_image_with_autoaugment(im, norm_gt_bbox,
+                                                          self.autoaug_type)
+        gt_bbox[:, 0] = norm_gt_bbox[:, 1] * float(width)
+        gt_bbox[:, 1] = norm_gt_bbox[:, 0] * float(height)
+        gt_bbox[:, 2] = norm_gt_bbox[:, 3] * float(width)
+        gt_bbox[:, 3] = norm_gt_bbox[:, 2] * float(height)
+
+        results['gt_bboxes'] = gt_bbox
+        results['img'] = im
+        results['img_shape'] = im.shape
+        results['pad_shape'] = im.shape
+
+        return results

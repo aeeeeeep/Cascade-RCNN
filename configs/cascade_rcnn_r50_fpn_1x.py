@@ -16,7 +16,6 @@ model = dict(
     # norm_cfg=dict(type='BN', requires_grad=True),
     # style='pytorch',
     # init_cfg=dict(type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d')),
-        _delete_=True,
         type='mmcls.ConvNeXt',
         arch='small',
         out_indices=[0, 1, 2, 3],
