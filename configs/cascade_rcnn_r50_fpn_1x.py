@@ -213,7 +213,7 @@ train_pipeline = [
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
-    dict(type='CopyPaste', max_num_pasted=100),
+    # dict(type='CopyPaste', max_num_pasted=100),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels']),
