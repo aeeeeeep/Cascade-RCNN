@@ -42,7 +42,7 @@ def get_metas_from_csv_style_ann_file(ann_file):
             if i == 0:
                 continue
             img_id = line[0]
-            filename = f'{img_id}.jpg'
+            filename = f'{img_id}.png'
             if filename != cp_filename:
                 data_infos.append(dict(filename=filename))
                 cp_filename = filename
