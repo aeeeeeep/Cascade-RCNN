@@ -237,8 +237,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=4,
-    workers_per_gpu=4,
+    samples_per_gpu=1,
+    workers_per_gpu=1,
     train=dict(
         type='MultiImageMixDataset',
         dataset=dict(
@@ -262,7 +262,7 @@ evaluation = dict(interval=1, metric='mAP')
 optimizer = dict(type='AdamW', lr=0.0001, betas=(0.9, 0.999),
                                weight_decay=0.01,
                                paramwise_cfg=dict(custom_keys=dict(head=dict(lr_mult=10.0))))
-optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
+optimizer_config = dict(type='GradientCumulativeOptimizerHook', cumulative_iters=4, grad_clip=dict(max_norm=35, norm_type=4))
 # learning policy
 lr_config = dict(
     policy='step',
