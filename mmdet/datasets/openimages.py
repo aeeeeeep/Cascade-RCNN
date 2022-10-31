@@ -187,7 +187,7 @@ class OpenImagesDataset(CustomDataset):
                 if i == 0:
                     continue
                 img_id = line[0]
-                filename = f'{img_id}.jpg'
+                filename = f'{img_id}.png'
                 label_id = line[2]
                 assert label_id in self.index_dict
                 label = int(self.index_dict[label_id])
