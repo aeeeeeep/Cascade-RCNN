@@ -1,23 +1,13 @@
 # model settings
 custom_imports = dict(imports=['mmcls.models'], allow_failed_imports=False)
-checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth'  # noqa
+checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/convnext-base_in21k-pre-3rdparty_32xb128_in1k_20220124-eb2d6ada.pth'
 
 model = dict(
     type='CascadeRCNN',
 
     backbone=dict(
-    # type='ResNeXt',
-    # depth=101,
-    # groups=32,
-    # base_width=4,
-    # num_stages=4,
-    # out_indices=(0, 1, 2, 3),
-    # frozen_stages=1,
-    # norm_cfg=dict(type='BN', requires_grad=True),
-    # style='pytorch',
-    # init_cfg=dict(type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d')),
         type='mmcls.ConvNeXt',
-        arch='small',
+        arch='base',
         out_indices=[0, 1, 2, 3],
         # dims=[96, 192, 384, 768],
         drop_path_rate=0.6,
@@ -28,7 +18,7 @@ model = dict(
             prefix='backbone.')),
     neck=dict(
         type='FPN',
-        in_channels=[96, 192, 384, 768],
+        in_channels=[128, 256, 512, 1024],
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
@@ -71,7 +61,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -84,8 +74,8 @@ model = dict(
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
                 loss_cls=dict(
-                    type='FocalLoss', use_sigmoid=True),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -99,7 +89,7 @@ model = dict(
                 reg_class_agnostic=True,
                 loss_cls=dict(
                     type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0)),
+                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0))
         ],)
 )
 
@@ -131,9 +121,9 @@ train_cfg = dict(
             dict(
                 assigner=dict(
                     type='MaxIoUAssigner',
-                    pos_iou_thr=0.5,
-                    neg_iou_thr=0.5,
-                    min_pos_iou=0.5,
+                    pos_iou_thr=0.55,
+                    neg_iou_thr=0.55,
+                    min_pos_iou=0.55,
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
@@ -146,9 +136,9 @@ train_cfg = dict(
             dict(
                 assigner=dict(
                     type='MaxIoUAssigner',
-                    pos_iou_thr=0.6,
-                    neg_iou_thr=0.6,
-                    min_pos_iou=0.6,
+                    pos_iou_thr=0.65,
+                    neg_iou_thr=0.65,
+                    min_pos_iou=0.65,
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
@@ -161,9 +151,9 @@ train_cfg = dict(
             dict(
                 assigner=dict(
                     type='MaxIoUAssigner',
-                    pos_iou_thr=0.7,
-                    neg_iou_thr=0.7,
-                    min_pos_iou=0.7,
+                    pos_iou_thr=0.75,
+                    neg_iou_thr=0.75,
+                    min_pos_iou=0.75,
                     ignore_iof_thr=-1),
                 sampler=dict(
                     type='RandomSampler',
@@ -199,22 +189,33 @@ load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Rotate', level=1, max_rotate_angle=90),
-    dict(type='Resize', img_scale=(1440, 1024), keep_ratio=True),
-    dict(type='RandomFlip', flip_ratio=0.5),
+    dict(type='Resize', img_scale=(2880, 2048), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
-    dict(type='AutoAugment_copy', autoaug_type='v2'),
-    dict(type='Mosaic', img_scale=(1440, 1024), pad_val=114.0),
+    dict(type='MinIoURandomCrop',
+        min_ious=(0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
+        min_crop_size=0.3),
+    dict(type='CutOut',n_holes=3,
+        cutout_ratio=[(0.05, 0.05), (0.1, 0.1), (0.07, 0.07)]),
+    dict(type='CutOut',n_holes=1,
+        cutout_ratio=[(0.2, 0.2), (0.15, 0.15), (0.13, 0.13)]),
+    dict(
+        type='Expand',
+        mean=img_norm_cfg['mean'],
+        to_rgb=img_norm_cfg['to_rgb'],
+        ratio_range=(1, 4)),
+    dict(type='Mosaic', img_scale=(2880, 2048), pad_val=114.0),
     dict(
         type='RandomAffine',
         scaling_ratio_range=(0.1, 2),
-        border=(-(1440 // 2), - (1024 // 2))),
+        border=(-(2880 // 2), - (2048 // 2))),
     dict(
         type='MixUp',
-        img_scale=(1440, 1024),
+        img_scale=(2880, 2048),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
+    dict(type='RandomFlip', flip_ratio=0.5),
     # dict(type='CopyPaste', max_num_pasted=100),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
@@ -224,7 +225,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1440, 1024),
+        img_scale=(2880, 2048),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -264,17 +265,12 @@ optimizer = dict(type='AdamW', lr=0.0001, betas=(0.9, 0.999),
 optimizer_config = dict(grad_clip=dict(max_norm=35, norm_type=2))
 # learning policy
 lr_config = dict(
-    policy='cyclic',
-    target_ratio=(10, 1e-4),
-    cyclic_times=1,
-    step_ratio_up=0.4
-    )
-momentum_config = dict(
-    policy='cyclic',
-    target_ratio=(0.8947368421052632, 1),
-    cyclic_times=1,
-    step_ratio_up=0.4)
-checkpoint_config = dict(interval=20)
+    policy='step',
+    warmup='linear',
+    warmup_iters=500,
+    warmup_ratio=1.0 / 3,
+    step=[33, 42])
+checkpoint_config = dict(interval=16)
 # yapf:disable
 # log_config = dict(
 #     interval=20,
@@ -290,16 +286,16 @@ log_config = dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
                 project='Cascade_RCNN_ConvNeXt_S',
-                name='ConvNeXt_S'
+                name='ConvNeXt_B'
             )
         )
     ])
 # yapf:enable
 # runtime settings
-total_epochs = 100
+total_epochs = 48
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_rcnn_x101_32x4d_fpn_1x'
+work_dir = './work_dirs/cascade_convnext_b'
 # load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
 # load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
 load_from = None
