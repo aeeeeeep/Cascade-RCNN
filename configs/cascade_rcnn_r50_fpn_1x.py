@@ -186,7 +186,7 @@ load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Rotate', level=1, max_rotate_angle=90),
-    dict(type='Resize', img_scale=(2160, 1536), keep_ratio=True),
+    dict(type='Resize', img_scale=(960, 768), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
@@ -202,14 +202,14 @@ train_pipeline = [
         mean=img_norm_cfg['mean'],
         to_rgb=img_norm_cfg['to_rgb'],
         ratio_range=(1, 4)),
-    dict(type='Mosaic', img_scale=(2160, 1536), pad_val=114.0),
+    dict(type='Mosaic', img_scale=(960, 768), pad_val=114.0),
     dict(
         type='RandomAffine',
         scaling_ratio_range=(0.1, 2),
-        border=(-(2160// 2), - (1536// 2))),
+        border=(-(960// 2), - (768// 2))),
     dict(
         type='MixUp',
-        img_scale=(2160, 1536),
+        img_scale=(960, 768),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -222,7 +222,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2160, 1536),
+        img_scale=(960, 768),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -234,8 +234,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=2,
+    samples_per_gpu=8,
+    workers_per_gpu=8,
     train=dict(
         type='MultiImageMixDataset',
         dataset=dict(
