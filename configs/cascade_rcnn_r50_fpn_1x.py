@@ -53,40 +53,40 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=8,  # 修改类别个数81 类别数量+1
+                num_classes=9,  # 修改类别个数81 类别数量+1
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_bbox=dict(type='BalancedL1Loss',alpha=0.5,gamma=1.5,beta=0.11,loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=8,
+                num_classes=9,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_bbox=dict(type='BalancedL1Loss',alpha=0.5,gamma=1.5,beta=0.11,loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=8,
+                num_classes=9,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
-                loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0))
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_bbox=dict(type='BalancedL1Loss',alpha=0.5,gamma=1.5,beta=0.11,loss_weight=1.0)),
         ],)
 )
 
@@ -94,9 +94,9 @@ train_cfg = dict(
         rpn=dict(
             assigner=dict(
                 type='MaxIoUAssigner',
-                pos_iou_thr=0.7,
-                neg_iou_thr=0.3,
-                min_pos_iou=0.3,
+                pos_iou_thr=0.6,
+                neg_iou_thr=0.2,
+                min_pos_iou=0.2,
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',
@@ -267,7 +267,7 @@ lr_config = dict(
     warmup_iters=500,
     warmup_ratio=1.0 / 3,
     step=[33, 42])
-checkpoint_config = dict(interval=16)
+checkpoint_config = dict(interval=8)
 # yapf:disable
 # log_config = dict(
 #     interval=20,
@@ -292,7 +292,7 @@ log_config = dict(
 total_epochs = 48
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_convnext_b'
+work_dir = './work_dirs/cascade_convnext_s'
 # load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
 # load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
 load_from = None

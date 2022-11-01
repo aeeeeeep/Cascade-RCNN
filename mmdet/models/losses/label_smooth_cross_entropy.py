@@ -2,13 +2,13 @@ from functools import partial
 
 import torch.nn.functional as F
 
-from mmdet.models.builder import LOSSES
-from mmdet.models.losses import CrossEntropyLoss, binary_cross_entropy, mask_cross_entropy
-from mmdet.models.losses.utils import weight_reduce_loss
+from ..builder import LOSSES
+from .cross_entropy_loss import CrossEntropyLoss, binary_cross_entropy, mask_cross_entropy
+from .utils import weight_reduce_loss
 
 
 def label_smooth_cross_entropy(
-    pred, label, weight=None, reduction="mean", avg_factor=None, class_weight=None, label_smooth=None
+    pred, label, weight=None, reduction="mean", avg_factor=None, class_weight=None, label_smooth=None, ignore_index=-100, avg_non_ignore=False
 ):
     # element-wise losses
     if label_smooth is None:
