@@ -59,7 +59,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
@@ -72,7 +72,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
@@ -85,7 +85,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
-                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", epsilon=0.1, loss_weight=1.0),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0))
         ],)
 )
@@ -186,7 +186,7 @@ load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Rotate', level=1, max_rotate_angle=90),
-    dict(type='Resize', img_scale=(2880, 2048), keep_ratio=True),
+    dict(type='Resize', img_scale=(2160, 1536), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
@@ -202,14 +202,14 @@ train_pipeline = [
         mean=img_norm_cfg['mean'],
         to_rgb=img_norm_cfg['to_rgb'],
         ratio_range=(1, 4)),
-    dict(type='Mosaic', img_scale=(2880, 2048), pad_val=114.0),
+    dict(type='Mosaic', img_scale=(2160, 1536), pad_val=114.0),
     dict(
         type='RandomAffine',
         scaling_ratio_range=(0.1, 2),
-        border=(-(2880 // 2), - (2048 // 2))),
+        border=(-(2160// 2), - (1536// 2))),
     dict(
         type='MixUp',
-        img_scale=(2880, 2048),
+        img_scale=(2160, 1536),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
     dict(type='RandomFlip', flip_ratio=0.5),
@@ -222,7 +222,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(2880, 2048),
+        img_scale=(2160, 1536),
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -234,8 +234,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=1,
-    workers_per_gpu=1,
+    samples_per_gpu=2,
+    workers_per_gpu=2,
     train=dict(
         type='MultiImageMixDataset',
         dataset=dict(
@@ -259,7 +259,7 @@ evaluation = dict(interval=1, metric='mAP')
 optimizer = dict(type='AdamW', lr=0.0001, betas=(0.9, 0.999),
                                weight_decay=0.01,
                                paramwise_cfg=dict(custom_keys=dict(head=dict(lr_mult=10.0))))
-optimizer_config = dict(type='GradientCumulativeOptimizerHook', cumulative_iters=4, grad_clip=dict(max_norm=35, norm_type=4))
+optimizer_config = dict(type='GradientCumulativeOptimizerHook', cumulative_iters=2, grad_clip=dict(max_norm=35, norm_type=4))
 # learning policy
 lr_config = dict(
     policy='step',
