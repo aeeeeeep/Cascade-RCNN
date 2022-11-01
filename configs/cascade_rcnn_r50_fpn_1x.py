@@ -1,13 +1,13 @@
 # model settings
 custom_imports = dict(imports=['mmcls.models'], allow_failed_imports=False)
-checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/convnext-base_in21k-pre-3rdparty_32xb128_in1k_20220124-eb2d6ada.pth'
+checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth'
 
 model = dict(
     type='CascadeRCNN',
 
     backbone=dict(
         type='mmcls.ConvNeXt',
-        arch='base',
+        arch='small',
         out_indices=[0, 1, 2, 3],
         # dims=[96, 192, 384, 768],
         drop_path_rate=0.6,
@@ -18,7 +18,7 @@ model = dict(
             prefix='backbone.')),
     neck=dict(
         type='FPN',
-        in_channels=[128, 256, 512, 1024],
+        in_channels=[96, 192, 384, 768],
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
@@ -59,8 +59,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
-                loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
@@ -73,8 +72,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
-                loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
@@ -87,8 +85,7 @@ model = dict(
                     target_means=[0., 0., 0., 0.],
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
-                loss_cls=dict(
-                    type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0),
+                loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
                 loss_bbox=dict(type='SmoothL1Loss', loss_weight=1.0))
         ],)
 )
@@ -286,7 +283,7 @@ log_config = dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
                 project='Cascade_RCNN_ConvNeXt_S',
-                name='ConvNeXt_B'
+                name='ConvNeXt_S'
             )
         )
     ])
