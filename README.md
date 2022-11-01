@@ -12,8 +12,12 @@
 ## Finsh
 * 数据增强
 * Soft-NMS
-* CIoULoss
+* CIoULoss(pass)
 * half anchor
+* Label Smoothing
+* ConvNext Small
+* IoU thr + 0.05
+* GradientCumulativeOptimizerHook
 
 ## TODO
 * 多尺度训练
