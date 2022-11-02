@@ -125,3 +125,5 @@ work_dirs/
 
 # Wandb
 wandb/
+
+./*.json
