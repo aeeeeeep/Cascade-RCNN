@@ -1,4 +1,5 @@
 import os
+import random
 import json
 os.getcwd()
 # import required functions, classes
@@ -9,7 +10,7 @@ from sahi.predict import get_prediction, get_sliced_prediction, predict
 from IPython.display import Image
 
 # download cascade mask rcnn model&config
-model_path = 'work_dirs/cascade_convnext_s/epoch_48.pth'
+model_path = 'work_dirs/cascade_convnext_s/latest.pth'
 config_path = 'configs/cascade_rcnn_r50_fpn_1x.py'
 
 # ## 4. Batch Prediction
@@ -17,7 +18,7 @@ model_type = "mmdet"
 model_path = model_path
 model_config_path = config_path
 model_device = "cuda:0" # or 'cuda:0'
-model_confidence_threshold = 0.001
+model_confidence_threshold = 0.65
 
 slice_height = 768
 slice_width = 960
@@ -30,7 +31,7 @@ detection_model = AutoDetectionModel.from_pretrained(
     model_type='mmdet',
     model_path=model_path,
     config_path=config_path,
-    confidence_threshold=0.001,
+    confidence_threshold=model_confidence_threshold,
     # image_size=(2880,2048),
     device="cuda:0", # or 'cuda:0'
 )
@@ -63,11 +64,12 @@ for img in imgs:
         bbox = item['bbox']
         float_bbox = []
         for i in bbox:
-            float_bbox.append(float(i)+0.00001)
-        jdict.append({'image_id':img[29:-4],
-                      'category_id':item['category_id'],
-                      'bbox':float_bbox,
-                      'score':round(item['score'],5)})
+            float_bbox.append(float(i))
+        if float_bbox:
+            jdict.append({'image_id':str(img[29:-4]),
+                          'category_id':int(item['category_id']),
+                          'bbox':float_bbox,
+                          'score':round(item['score'],5)})
 
 pred_json = './pred.json'
 print('\nSaveing %s...' % pred_json)
