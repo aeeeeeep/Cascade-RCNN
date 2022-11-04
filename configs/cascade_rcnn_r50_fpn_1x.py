@@ -7,7 +7,7 @@ model = dict(
 
     backbone=dict(
         type='mmcls.ConvNeXt',
-        frozen_stages=1,
+        # frozen_stages=1,
         arch='small',
         out_indices=[0, 1, 2, 3],
         # dims=[96, 192, 384, 768],
@@ -177,7 +177,7 @@ test_cfg = dict(
             score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.65), max_per_img=100),
         keep_all_stages=False)
 # model training and testing settings
-custom_hooks = [dict(type="UnfreezeBackboneEpochBasedHook", unfreeze_epoch=4)]
+# custom_hooks = [dict(type="UnfreezeBackboneEpochBasedHook", unfreeze_epoch=4)]
 # dataset settings
 dataset_type = 'VOCDataset'
 data_root = '/root/autodl-tmp/VOCdevkit/'

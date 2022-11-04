@@ -8,7 +8,7 @@ from mmdet.models import build_detector
 from mmdet.apis import init_detector, inference_detector
 
 config_file = 'configs/cascade_rcnn_r50_fpn_1x.py'
-checkpoint_file = 'work_dirs/cascade_convnext_b/epoch_32.pth'
+checkpoint_file = 'work_dirs/cascade_convnext_s_2/latest.pth'
 
 model = init_detector(config_file,checkpoint_file)
 print(model.CLASSES)

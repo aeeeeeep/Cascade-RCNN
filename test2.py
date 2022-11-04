@@ -18,7 +18,7 @@ model_type = "mmdet"
 model_path = model_path
 model_config_path = config_path
 model_device = "cuda:0" # or 'cuda:0'
-model_confidence_threshold = 0.65
+model_confidence_threshold = 0.4
 
 slice_height = 768
 slice_width = 960
