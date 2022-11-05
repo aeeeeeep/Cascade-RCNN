@@ -10,7 +10,7 @@ from sahi.predict import get_prediction, get_sliced_prediction, predict
 from IPython.display import Image
 
 # download cascade mask rcnn model&config
-model_path = 'work_dirs/cascade_convnext_s/latest.pth'
+model_path = 'work_dirs/cascade_convnext_b_2/latest.pth'
 config_path = 'configs/cascade_rcnn_r50_fpn_1x.py'
 
 # ## 4. Batch Prediction
