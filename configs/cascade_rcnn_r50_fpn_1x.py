@@ -30,7 +30,7 @@ model = dict(
         feat_channels=256,
         anchor_generator=dict(
             type='AnchorGenerator',
-            scales=[4],
+            scales=[2],
             ratios=[0.5, 1.0, 2.0],
             strides=[4, 8, 16, 32, 64]),
         bbox_coder=dict(
@@ -39,7 +39,6 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0),
         reg_decoded_bbox=True,
         loss_bbox=dict(type='GIoULoss', loss_weight=5.0),
     ),
@@ -65,7 +64,6 @@ model = dict(
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
                 reg_decoded_bbox=True,
                 loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
@@ -80,7 +78,6 @@ model = dict(
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
                 reg_decoded_bbox=True,
                 loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
@@ -95,7 +92,6 @@ model = dict(
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
                 reg_decoded_bbox=True,
                 loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
         ],)
@@ -184,10 +180,13 @@ test_cfg = dict(
             nms=dict(type='soft_nms', iou_threshold=0.65),
             min_bbox_size=0),
         rcnn=dict(
-            score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.65), max_per_img=100),
+            score_thr=0.05, nms=dict(type='soft_nms', iou_thr=0.5), max_per_img=100),
         keep_all_stages=False)
 # model training and testing settings
 # custom_hooks = [dict(type="UnfreezeBackboneEpochBasedHook", unfreeze_epoch=4)]
+resume_from = None
+custom_hooks = [dict(type='ExpMomentumEMAHook', resume_from=resume_from, momentum=0.0001, priority=49),]
+                # dict(type="UnfreezeBackboneEpochBasedHook", unfreeze_epoch=3)]
 # dataset settings
 dataset_type = 'VOCDataset'
 data_root = '/root/autodl-tmp/VOCdevkit/'
@@ -197,7 +196,7 @@ load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Rotate', level=1, max_rotate_angle=90),
-    dict(type='Resize', img_scale=[(960, 768),(640, 512)], keep_ratio=True),
+    dict(type='Resize', img_scale=(960, 768), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
@@ -215,11 +214,11 @@ train_pipeline = [
         img_scale=(960, 768),
         ratio_range=(0.8, 1.6),
         pad_val=114.0),
-    dict(
-        type='MixUp',
-        img_scale=(960, 768),
-        ratio_range=(0.8, 1.6),
-        pad_val=114.0),
+    # dict(
+    #     type='MixUp',
+    #     img_scale=(960, 768),
+    #     ratio_range=(0.8, 1.6),
+    #     pad_val=114.0),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
@@ -304,5 +303,4 @@ work_dir = './work_dirs/cascade_convnext_b_2'
 # load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
 # load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
 load_from = None
-resume_from = None
 workflow = [('train', 1)]

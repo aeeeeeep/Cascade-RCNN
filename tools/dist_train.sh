@@ -14,7 +14,7 @@ python -m torch.distributed.launch \
     --master_addr=$MASTER_ADDR \
     --nproc_per_node=$GPUS \
     --master_port=$PORT \
-    $(dirname "$0")/train.py --resume-from work_dirs/cascade_convnext_b_2/epoch_8.pth \
+    $(dirname "$0")/train.py \
     $CONFIG \
     --seed 0 \
     --launcher pytorch ${@:3}
