@@ -1,6 +1,7 @@
 # model settings
 custom_imports = dict(imports=['mmcls.models'], allow_failed_imports=False)
-checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth'
+# checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/downstream/convnext-small_3rdparty_32xb128-noema_in1k_20220301-303e75e3.pth'
+checkpoint_file = 'https://download.openmmlab.com/mmclassification/v0/convnext/convnext-base_in21k-pre-3rdparty_32xb128_in1k_20220124-eb2d6ada.pth'
 
 model = dict(
     type='CascadeRCNN',
@@ -8,7 +9,7 @@ model = dict(
     backbone=dict(
         type='mmcls.ConvNeXt',
         # frozen_stages=1,
-        arch='small',
+        arch='base',
         out_indices=[0, 1, 2, 3],
         # dims=[96, 192, 384, 768],
         drop_path_rate=0.6,
@@ -19,7 +20,8 @@ model = dict(
             prefix='backbone.')),
     neck=dict(
         type='FPN',
-        in_channels=[96, 192, 384, 768],
+        # in_channels=[96, 192, 384, 768],
+        in_channels=[128, 256, 512, 1024],
         out_channels=256,
         num_outs=5),
     rpn_head=dict(
@@ -37,7 +39,9 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0),
+        # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0),
+        reg_decoded_bbox=True,
+        loss_bbox=dict(type='GIoULoss', loss_weight=5.0),
     ),
     roi_head=dict(
         type='CascadeRoIHead',
@@ -61,7 +65,9 @@ model = dict(
                     target_stds=[0.1, 0.1, 0.2, 0.2]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                reg_decoded_bbox=True,
+                loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -74,7 +80,9 @@ model = dict(
                     target_stds=[0.05, 0.05, 0.1, 0.1]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                reg_decoded_bbox=True,
+                loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
@@ -87,7 +95,9 @@ model = dict(
                     target_stds=[0.033, 0.033, 0.067, 0.067]),
                 reg_class_agnostic=True,
                 loss_cls=dict(type="LabelSmoothCrossEntropyLoss", use_sigmoid=False, loss_weight=1.0, label_smooth=0.1),
-                loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                # loss_bbox=dict(type='SmoothL1Loss', beta=1.0 / 9.0, loss_weight=1.0)),
+                reg_decoded_bbox=True,
+                loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
         ],)
 )
 
@@ -187,10 +197,11 @@ load_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
     dict(type='Rotate', level=1, max_rotate_angle=90),
-    dict(type='Resize', img_scale=(960, 768), keep_ratio=True),
+    dict(type='Resize', img_scale=[(960, 768),(640, 512)], keep_ratio=True),
     dict(type='Pad', size_divisor=32),
 ]
 train_pipeline = [
+    # dict(type='CopyPaste', max_num_pasted=100),
     dict(type='MinIoURandomCrop',
         min_ious=(0.4, 0.5, 0.6, 0.7, 0.8, 0.9),
         min_crop_size=0.3),
@@ -230,8 +241,8 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=12,
-    workers_per_gpu=24,
+    samples_per_gpu=4,
+    workers_per_gpu=8,
     train=dict(
         type='MultiImageMixDataset',
         dataset=dict(
@@ -279,8 +290,8 @@ log_config = dict(
         dict(
             type='WandbLoggerHook',
             init_kwargs=dict(
-                project='Cascade_RCNN_ConvNeXt_S',
-                name='ConvNeXt_S'
+                project='Cascade_RCNN_ConvNeXt_B',
+                name='ConvNeXt_B'
             )
         )
     ])
@@ -289,7 +300,7 @@ log_config = dict(
 total_epochs = 24
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
-work_dir = './work_dirs/cascade_convnext_s_2'
+work_dir = './work_dirs/cascade_convnext_b_2'
 # load_from = "./data/pretrained/cascade_rcnn_r50_fpn_1x_coco_20200316-3dc56deb.pth"
 # load_from = "./data/pretrained/cascade_rcnn_x101_32x4d_fpn_1x_coco_20200316-95c2deb6.pth"
 load_from = None
