@@ -18,9 +18,6 @@
 * ConvNext Small
 * IoU thr + 0.05
 * GradientCumulativeOptimizerHook
-
-## TODO
-* 多尺度训练
-* OHEM
 * 可变形卷积
+* OHEM
 * 冻结backbone
